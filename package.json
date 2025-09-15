@@ -20,7 +20,8 @@
     "lint:fix": "eslint --fix \"src/**/*.{ts,tsx}\"",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist coverage",
-    "prepare": "husky"
+    "prepare": "husky",
+    "pre-commit": "pnpm run lint && pnpm run type-check && pnpm test && pnpm run build"
   },
   "dependencies": {
     "react": "^19.1.1",
