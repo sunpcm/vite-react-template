@@ -52,8 +52,8 @@
 ├── .gitignore              # Git ignore rules
 ├── .lintstagedrc.json      # Lint-staged configuration
 ├── .prettierrc.json        # Prettier configuration
-├── babel.config.js         # Babel configuration for Jest
-├── jest.config.js          # Jest testing configuration
+├── babel.config.cjs        # Babel configuration for Jest
+├── jest.config.cjs         # Jest testing configuration
 ├── package.json            # Dependencies and scripts
 ├── tsconfig.json           # TypeScript configuration
 └── vite.config.ts          # Vite configuration

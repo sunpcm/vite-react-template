@@ -1,5 +1,5 @@
 // jest.config.js
-export default {
+module.exports = {
   testEnvironment: 'jsdom',
 
   // 更新 transform 来处理 ts/tsx 文件
