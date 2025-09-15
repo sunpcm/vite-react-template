@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -15,40 +15,40 @@ jobs:
         node-version: [18.x, 20.x]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 10
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'pnpm'
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
 
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-    - name: Run type check
-      run: pnpm type-check
+      - name: Run type check
+        run: pnpm type-check
 
-    - name: Run linter
-      run: pnpm lint
+      - name: Run linter
+        run: pnpm lint
 
-    - name: Run tests
-      run: pnpm test:coverage
+      - name: Run tests
+        run: pnpm test:coverage
 
-    - name: Build
-      run: pnpm build
+      - name: Build
+        run: pnpm build
 
-    - name: Upload coverage to Codecov
-      if: matrix.node-version == '20.x'
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '20.x'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
