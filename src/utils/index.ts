@@ -13,3 +13,6 @@ export const debounce = <T extends (...args: unknown[]) => unknown>(
     timeoutId = setTimeout(() => func(...args), delay);
   };
 };
+
+// Tailwind utilities
+export { cn } from './cn';
