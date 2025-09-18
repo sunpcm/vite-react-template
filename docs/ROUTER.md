@@ -164,7 +164,7 @@ export default function Home() {
 ## 5. 更新 App.tsx
 
 ```tsx
-import { AppRouter } from './router';
+import { AppRouter } from './routes';
 
 function App() {
   return <AppRouter />;
