@@ -1,5 +1,5 @@
+import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
 import App from '../App';
 
 describe('App Component', () => {
@@ -34,7 +34,7 @@ describe('App Component', () => {
       screen.getByText('⚡ Vite + React 18 + TypeScript')
     ).toBeInTheDocument();
     expect(screen.getByText('🎨 Tailwind CSS')).toBeInTheDocument();
-    expect(screen.getByText('🧪 Jest + Testing Library')).toBeInTheDocument();
+    expect(screen.getByText('🧪 Vitest + Testing Library')).toBeInTheDocument();
   });
 
   it('displays call-to-action buttons', () => {

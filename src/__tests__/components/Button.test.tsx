@@ -1,5 +1,5 @@
+import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
 import Button from '../../components/Button';
 
 describe('Button Component', () => {
@@ -36,7 +36,7 @@ describe('Button Component', () => {
   });
 
   it('handles click events', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     render(<Button onClick={handleClick}>Clickable Button</Button>);
 
     const button = screen.getByRole('button');
