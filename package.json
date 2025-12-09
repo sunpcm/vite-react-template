@@ -18,7 +18,6 @@
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist coverage",
     "prepare": "husky",
-    "pre-commit": "pnpm run lint && pnpm run type-check && pnpm test && pnpm run build",
     "commit": "git-cz",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -74,11 +73,12 @@
     "vitest": "^4.0.15"
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx,js,jsx}": [
+    "*.{js,jsx,ts,tsx}": [
       "eslint --fix",
-      "prettier --write"
+      "prettier --write",
+      "vitest related --run"
     ],
-    "src/**/*.{json,css,md}": [
+    "*.{json,css,md}": [
       "prettier --write"
     ]
   }
