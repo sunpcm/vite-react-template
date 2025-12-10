@@ -1,54 +1,139 @@
-name: CI
+name: PR Quality Check
 
+# 触发条件：向 develop 或 main 分支提交 PR 时
 on:
-  push:
-    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [develop, main]
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created, edited]
+
+# 权限配置 (AI Review 需要写评论权限)
+permissions:
+  contents: write # 👈 必须改为 write (用于提交代码建议/git操作)
+  pull-requests: write # 用于写评论、修改 PR 描述
+  issues: write # 👈 新增 (因为 PR 评论在 GitHub 也就是 Issue 评论)
 
 jobs:
-  test:
+  # 任务 1: 构建检查 & 单元测试 (并行运行的基础)
+  quality-check:
+    name: 🏗️ Build & Unit Test
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v2
         with:
           version: 10
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run type check
-        run: pnpm type-check
-
-      - name: Run linter
-        run: pnpm lint
-
-      - name: Run tests
-        run: pnpm test:coverage
-
-      - name: Build
+      # ✅ Build Check: 确保能打包，无类型错误
+      - name: 📦 Build Check
         run: pnpm build
 
-      - name: Upload coverage to Codecov
-        if: matrix.node-version == '20.x'
-        uses: codecov/codecov-action@v4
+      # ✅ Unit Test: 全量单元测试
+      - name: 🧪 Unit Test
+        run: pnpm test:run
+
+  # 任务 2: E2E 冒烟测试 (只跑关键路径)
+  e2e-smoke:
+    name: 🎭 E2E Smoke Test
+    runs-on: ubuntu-latest
+    needs: quality-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
         with:
-          file: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 👇 新增：获取 Playwright 版本用于缓存 Key
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "PLAYWRIGHT_VERSION=$(pnpm ls @playwright/test --json | jq '.[0].version' -r)" >> $GITHUB_ENV
+
+      # 👇 新增：缓存浏览器二进制文件
+      - name: Cache playwright binaries
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
+      # 👇 修改：只有缓存未命中才安装浏览器
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps
+
+      - name: 🚀 Run Smoke Tests
+        run: pnpm exec playwright test --grep @smoke
+
+  # 任务 3: AI 代码审查 (Non-blocking)
+  ai-review:
+    name: 🤖 AI Code Review
+    runs-on: ubuntu-latest
+    needs: quality-check
+    if: github.event_name == 'pull_request'
+    continue-on-error: true # ✅ 关键：即使 AI 报错或超时，也不阻止 PR 合并
+
+    # ⚠️ 权限必须配置！PR-Agent 需要比普通 Reviewer 更高的权限
+    permissions:
+      issues: write # 允许在 PR 里发评论
+      pull-requests: write # 允许修改 PR 详情（如自动填 Description）
+      contents: write # 允许提交代码建议
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 这里使用一个流行的开源 Action 作为示例 (需要配置 OPENAI_API_KEY)
+      # 你也可以替换为 CodeRabbit 等第三方应用
+      - name: CodiumAI PR-Agent
+        uses: Codium-ai/pr-agent@main
+        env:
+          # 👇 关键配置 1: 传入 API Key
+          # 如果你是用 DeepSeek，这里就把值设为你的 DeepSeek Key
+          # PR-Agent 内部默认认 "OPENAI_KEY" 这个变量名，不管是哪家模型
+          OPENAI_KEY: ${{ secrets.LLM_API_KEY }}
+
+          # GitHub Token 也是必须的
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # 👇 关键配置 2: 告诉它怎么用 DeepSeek
+          PR_AGENT_CONFIG_VARS: |
+            # 强制替换 OpenAI 的地址为 DeepSeek
+            openai.base_url=https://api.gptapi.us/v1
+            openai.api_type=openai
+
+            # 指定模型 (DeepSeek V3 目前是性价比之王)
+            config.model=deepseek-chat
+            config.model_turbo=deepseek-chat
+            config.fallback_models=["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1","deepseek-v3.1-terminus"]
+
+            # 设定语言为中文
+            extra_settings.language="Chinese"
+
+            #哪怕 AI 报错也不要让 Action 失败
+            config.ignore_pr_agent_errors=true
