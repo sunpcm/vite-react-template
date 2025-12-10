@@ -116,8 +116,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # 模型配置
-          config.model: "openai/deepseek-chat"
-          config.fallback_models: '["openai/deepseek-r1","openai/deepseek-r1-0528","openai/deepseek-v3","openai/deepseek-v3.1"]'
+          config.model_provider: "openai"
+          config.model: "deepseek-chat"
+          config.fallback_models: '["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1"]'
           config.custom_model_max_tokens: "128000"
 
           # 功能配置
