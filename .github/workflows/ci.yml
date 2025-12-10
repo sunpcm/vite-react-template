@@ -112,7 +112,7 @@ jobs:
       # 你也可以替换为 CodeRabbit 等第三方应用
 
       - name: CodiumAI PR-Agent
-        uses: Codium-ai/pr-agent@main
+        uses: qodo-ai/pr-agent@main
         env:
           # 👇 关键配置 1: 传入 API Key
           # 如果你是用 DeepSeek，这里就把值设为你的 DeepSeek Key
@@ -143,9 +143,9 @@ jobs:
 
             #哪怕 AI 报错也不要让 Action 失败
             config.ignore_pr_agent_errors=true
-            
+
             # 👇 新增：开启详细日志
             config.verbosity_level=2
-            
+
             # 👇 修改：调试期间不允许忽略错误，否则看不到报错
             config.ignore_pr_agent_errors=false
