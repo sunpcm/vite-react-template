@@ -1,6 +1,6 @@
 # 🚀 Modern React TypeScript Template
 
-> A production-ready React + TypeScript template with Vite, pnpm, Jest, and modern development best practices pre-configured.
+> A production-ready React + TypeScript template with Vite, pnpm, Vitest, Playwright, and modern development best practices pre-configured.
 
 [![CI](https://github.com/sunpcm/code-js/workflows/CI/badge.svg)](https://github.com/sunpcm/code-js/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
@@ -12,7 +12,8 @@
 - ⚛️ **[React 19](https://react.dev/)** - Latest React with new features
 - 🔷 **[TypeScript](https://www.typescriptlang.org/)** - Type safety and enhanced developer experience
 - 📦 **[pnpm](https://pnpm.io/)** - Fast, disk space efficient package manager
-- 🧪 **[Jest](https://jestjs.io/)** + **[Testing Library](https://testing-library.com/)** - Comprehensive testing setup
+- 🧪 **[Vitest](https://vitest.dev/)** + **[Testing Library](https://testing-library.com/)** - Unit testing with Vitest
+- 🎭 **[Playwright](https://playwright.dev/)** - End-to-end testing across multiple browsers
 - 🔍 **[ESLint](https://eslint.org/)** - Code linting with React and TypeScript rules
 - 💅 **[Prettier](https://prettier.io/)** - Opinionated code formatting
 - 🐶 **[Husky](https://typicode.github.io/husky/)** - Git hooks for code quality
@@ -31,10 +32,11 @@
 ├── .vscode/                # VS Code configuration
 │   ├── extensions.json     # Recommended extensions
 │   └── settings.json       # Workspace settings
+├── e2e/                    # End-to-end tests
+│   └── app.spec.ts         # Example e2e test
 ├── public/                 # Static assets
 ├── src/
-│   ├── __mocks__/          # Jest mocks
-│   ├── __tests__/          # Test files
+│   ├── __tests__/          # Unit test files
 │   │   └── App.test.tsx    # Example component test
 │   ├── assets/             # Images, icons, etc.
 │   ├── components/         # React components
@@ -48,15 +50,14 @@
 │   ├── main.tsx            # Entry point
 │   └── vite-env.d.ts       # Vite and custom type definitions
 ├── .env.example            # Environment variables template
-├── .eslintrc.cjs           # ESLint configuration
 ├── .gitignore              # Git ignore rules
 ├── .lintstagedrc.json      # Lint-staged configuration
 ├── .prettierrc.json        # Prettier configuration
-├── babel.config.cjs        # Babel configuration for Jest
-├── jest.config.cjs         # Jest testing configuration
 ├── package.json            # Dependencies and scripts
+├── playwright.config.ts    # Playwright e2e testing configuration
+├── setupTests.ts           # Vitest setup file
 ├── tsconfig.json           # TypeScript configuration
-└── vite.config.ts          # Vite configuration
+└── vite.config.ts          # Vite and Vitest configuration
 ```
 
 ## � Quick Start
@@ -105,9 +106,14 @@ pnpm dev
 | `pnpm dev` | Start development server with HMR |
 | `pnpm build` | Build for production |
 | `pnpm preview` | Preview production build locally |
-| `pnpm test` | Run tests |
-| `pnpm test:watch` | Run tests in watch mode |
-| `pnpm test:coverage` | Run tests with coverage report |
+| `pnpm test` | Run unit tests in watch mode |
+| `pnpm test:run` | Run unit tests once |
+| `pnpm test:ui` | Run unit tests with UI |
+| `pnpm test:coverage` | Run unit tests with coverage report |
+| `pnpm test:e2e` | Run end-to-end tests |
+| `pnpm test:e2e:headed` | Run e2e tests with browser UI |
+| `pnpm test:e2e:ui` | Run e2e tests with Playwright UI |
+| `pnpm test:e2e:debug` | Debug e2e tests step by step |
 | `pnpm lint` | Run ESLint |
 | `pnpm lint:fix` | Fix ESLint errors automatically |
 | `pnpm format` | Format code with Prettier |
@@ -117,24 +123,27 @@ pnpm dev
 
 ## 🧪 Testing
 
-This template includes a comprehensive testing setup:
+This template includes a comprehensive testing setup with both unit tests (Vitest) and end-to-end tests (Playwright).
 
-### Running Tests
+### Unit Testing with Vitest
+
+Vitest is a blazing fast unit test framework powered by Vite.
 
 ```bash
-# Run all tests
+# Run unit tests in watch mode (recommended for development)
 pnpm test
 
-# Run tests in watch mode (recommended for development)
-pnpm test:watch
+# Run unit tests once
+pnpm test:run
+
+# Run tests with UI
+pnpm test:ui
 
 # Run tests with coverage report
 pnpm test:coverage
 ```
 
-### Writing Tests
-
-Example test structure:
+**Writing Unit Tests:**
 
 ```typescript
 // src/__tests__/Component.test.tsx
@@ -147,8 +156,64 @@ describe('Component', () => {
     render(<Component />)
     expect(screen.getByText('Hello World')).toBeInTheDocument()
   })
+
+  it('should handle user interactions', () => {
+    const handleClick = vi.fn()
+    render(<Component onClick={handleClick} />)
+    fireEvent.click(screen.getByRole('button'))
+    expect(handleClick).toHaveBeenCalledOnce()
+  })
 })
 ```
+
+### End-to-End Testing with Playwright
+
+Playwright enables reliable end-to-end testing across Chromium, Firefox, and WebKit.
+
+```bash
+# Run all e2e tests (headless)
+pnpm test:e2e
+
+# Run e2e tests with browser UI visible
+pnpm test:e2e:headed
+
+# Run e2e tests with Playwright UI for better debugging
+pnpm test:e2e:ui
+
+# Debug e2e tests step by step
+pnpm test:e2e:debug
+
+# Run only smoke tests
+pnpm test:e2e --grep @smoke
+```
+
+**Writing E2E Tests:**
+
+```typescript
+// e2e/feature.spec.ts
+import { test, expect } from '@playwright/test'
+
+test.describe('Feature Name', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+  })
+
+  test('should perform user action @smoke', async ({ page }) => {
+    // Interact with the page
+    await page.click('button:has-text("Click me")')
+    
+    // Verify the result
+    await expect(page.getByText('Success!')).toBeVisible()
+  })
+})
+```
+
+**Best Practices:**
+
+- Use `@smoke` tag for critical path tests that run on every PR
+- Use descriptive test names that explain the expected behavior
+- Keep e2e tests focused on user workflows, not implementation details
+- Use Playwright's auto-waiting for reliable tests
 
 ## 🔧 Configuration
 

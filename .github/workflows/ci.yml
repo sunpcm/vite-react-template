@@ -57,12 +57,12 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 9
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -89,6 +89,15 @@ jobs:
 
       - name: 🚀 Run Smoke Tests
         run: pnpm exec playwright test --grep @smoke
+
+      # 👇 新增：上传测试报告（仅在失败时）
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
 
   # 任务 3: AI 代码审查 (Non-blocking)
   ai-review:
