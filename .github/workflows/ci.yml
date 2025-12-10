@@ -163,3 +163,9 @@ jobs:
             
             # 👇 修改：调试期间不允许忽略错误，否则看不到报错
             config.ignore_pr_agent_errors=false
+            
+            # 👇👇👇 新增这两行配置 👇👇👇
+            # 允许在 PR 更新(synchronize)时自动运行 Review
+            github_action.auto_review=true
+            # 允许在 PR 更新(synchronize)时自动更新 PR 描述
+            github_action.auto_describe=true
