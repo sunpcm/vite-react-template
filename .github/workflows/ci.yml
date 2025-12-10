@@ -118,9 +118,10 @@ jobs:
           # 如果你是用 DeepSeek，这里就把值设为你的 DeepSeek Key
           # PR-Agent 内部默认认 "OPENAI_API_KEY" 这个变量名，不管是哪家模型
           OPENAI_KEY: sk-EUzpSBwmMZN2VvgU467d4f00D79143BcB21d301cDa8dF2B3
-
+          OPENAI.API_BASE: https://api.gptapi.us/v1
           # GitHub Token 也是必须的
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
           # 👇 关键配置 2: 告诉它怎么用 DeepSeek
           PR_AGENT_CONFIG_VARS: |
