@@ -121,32 +121,9 @@ jobs:
           OPENAI.API_BASE: https://api.gptapi.us/v1
           # GitHub Token 也是必须的
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-          # 👇 关键配置 2: 告诉它怎么用 DeepSeek
-          PR_AGENT_CONFIG_VARS: |
-            # 👇👇👇 新增这两行配置 👇👇👇
-            # 允许在 PR 更新(synchronize)时自动运行 Review
-            github_action.auto_review=true
-            # 允许在 PR 更新(synchronize)时自动更新 PR 描述
-            github_action.auto_describe=true
-            # 强制替换 OpenAI 的地址为 DeepSeek
-            openai.base_url=https://api.gptapi.us/v1
-            openai.api_type=openai
-
-            # 指定模型
-            config.model=deepseek-chat
-            config.model_turbo=deepseek-chat
-            config.fallback_models=["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1","deepseek-v3.1-terminus"]
-
-            # 设定语言为中文
-            extra_settings.language="Chinese"
-
-            #哪怕 AI 报错也不要让 Action 失败
-            config.ignore_pr_agent_errors=true
-
-            # 👇 新增：开启详细日志
-            config.verbosity_level=2
-
-            # 👇 修改：调试期间不允许忽略错误，否则看不到报错
-            config.ignore_pr_agent_errors=false
+          config.model: "deepseek-chat"
+          config.fallback_models: ["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1","deepseek-v3.1-terminus"]
+          # Tool configuration
+          github_action_config.auto_review: "true"
+          github_action_config.auto_describe: "true"
+          github_action_config.auto_improve: "true"
