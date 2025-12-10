@@ -34,7 +34,9 @@ describe('App Component', () => {
       screen.getByText('⚡ Vite + React 18 + TypeScript')
     ).toBeInTheDocument();
     expect(screen.getByText('🎨 Tailwind CSS')).toBeInTheDocument();
-    expect(screen.getByText('🧪 Vitest + Testing Library')).toBeInTheDocument();
+    expect(
+      screen.getByText('🧪 Vitest + Testing Library + AI PR Review')
+    ).toBeInTheDocument();
   });
 
   it('displays call-to-action buttons', () => {
