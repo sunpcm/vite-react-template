@@ -149,7 +149,7 @@ jobs:
             # 允许在 PR 更新(synchronize)时自动更新 PR 描述
             github_action.auto_describe=true
             # 强制替换 OpenAI 的地址为 DeepSeek
-            openai.base_url=${{ secrets.API_BASE_URL }}
+            openai.base_url=https://api.gptapi.us/v1
             openai.api_type=openai
 
             # 指定模型
