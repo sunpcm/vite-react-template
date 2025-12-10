@@ -43,10 +43,10 @@ test.describe('App Home Page', () => {
     const main = page.locator('main');
     await expect(main).toBeVisible();
 
-    // 验证有标题结构
+    // 验证有标题结构（至少有一个标题）
     const headings = page.getByRole('heading');
-    await expect(headings).toHaveCount(await headings.count());
-    expect(await headings.count()).toBeGreaterThan(0);
+    const headingCount = await headings.count();
+    expect(headingCount).toBeGreaterThan(0);
   });
 
   test('should be responsive', async ({ page }) => {
