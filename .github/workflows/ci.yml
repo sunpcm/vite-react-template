@@ -114,18 +114,14 @@ jobs:
       - name: CodiumAI PR-Agent
         uses: qodo-ai/pr-agent@main
         env:
-          # 👇 关键配置 1: 传入 API Key
-          # 如果你是用 DeepSeek，这里就把值设为你的 DeepSeek Key
-          # PR-Agent 内部默认认 "OPENAI_API_KEY" 这个变量名，不管是哪家模型
           OPENAI_KEY: sk-EUzpSBwmMZN2VvgU467d4f00D79143BcB21d301cDa8dF2B3
-          OPENAI_API_KEY: sk-EUzpSBwmMZN2VvgU467d4f00D79143BcB21d301cDa8dF2B3
-          OPENAI.API_BASE: https://api.gptapi.us/v1
-          # GitHub Token 也是必须的
+#          OPENAI.API_BASE: https://api.gptapi.us/v1
+          OPENAI_API_BASE: https://api.gptapi.us/v1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           config.model: "deepseek-chat"
           config.fallback_models: '["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1","deepseek-v3.1-terminus"]'
           config.custom_model_max_tokens: "128000"
-          # Tool configuration
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
+          github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "review_requested"]'
