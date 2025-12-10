@@ -115,8 +115,8 @@ jobs:
         env:
           # 👇 关键配置 1: 传入 API Key
           # 如果你是用 DeepSeek，这里就把值设为你的 DeepSeek Key
-          # PR-Agent 内部默认认 "OPENAI_KEY" 这个变量名，不管是哪家模型
-          OPENAI_KEY: ${{ secrets.LLM_API_KEY }}
+          # PR-Agent 内部默认认 "OPENAI_API_KEY" 这个变量名，不管是哪家模型
+          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
 
           # GitHub Token 也是必须的
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -124,10 +124,10 @@ jobs:
           # 👇 关键配置 2: 告诉它怎么用 DeepSeek
           PR_AGENT_CONFIG_VARS: |
             # 强制替换 OpenAI 的地址为 DeepSeek
-            openai.base_url=https://api.gptapi.us/v1
+            openai.base_url=${{ secrets.API_BASE_URL }}
             openai.api_type=openai
 
-            # 指定模型 (DeepSeek V3 目前是性价比之王)
+            # 指定模型
             config.model=deepseek-chat
             config.model_turbo=deepseek-chat
             config.fallback_models=["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1","deepseek-v3.1-terminus"]
@@ -137,3 +137,9 @@ jobs:
 
             #哪怕 AI 报错也不要让 Action 失败
             config.ignore_pr_agent_errors=true
+            
+            # 👇 新增：开启详细日志
+            config.verbosity_level=2
+            
+            # 👇 修改：调试期间不允许忽略错误，否则看不到报错
+            config.ignore_pr_agent_errors=false
