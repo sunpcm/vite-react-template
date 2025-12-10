@@ -107,10 +107,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # 这里使用一个流行的开源 Action 作为示例 (需要配置 OPENAI_API_KEY)
-      # 你也可以替换为 CodeRabbit 等第三方应用
-
       - name: CodiumAI PR-Agent
         uses: qodo-ai/pr-agent@main
         env:
@@ -120,8 +116,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # 模型配置
-          config.model: "deepseek-chat"
-          config.fallback_models: '["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1"]'
+          config.model: "openai/deepseek-chat"
+          config.fallback_models: '["openai/deepseek-r1","openai/deepseek-r1-0528","openai/deepseek-v3","openai/deepseek-v3.1"]'
           config.custom_model_max_tokens: "128000"
 
           # 功能配置
