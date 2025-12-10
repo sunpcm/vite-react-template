@@ -57,12 +57,12 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 9
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -123,6 +123,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           config.model: "deepseek-chat"
           config.fallback_models: ["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1","deepseek-v3.1-terminus"]
+        with:
           # Tool configuration
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
