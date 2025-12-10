@@ -114,13 +114,17 @@ jobs:
       - name: CodiumAI PR-Agent
         uses: qodo-ai/pr-agent@main
         env:
+          # API 配置
           OPENAI_KEY: sk-EUzpSBwmMZN2VvgU467d4f00D79143BcB21d301cDa8dF2B3
-#          OPENAI.API_BASE: https://api.gptapi.us/v1
           OPENAI_API_BASE: https://api.gptapi.us/v1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # 模型配置
           config.model: "deepseek-chat"
           config.fallback_models: '["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1"]'
           config.custom_model_max_tokens: "128000"
+
+          # 功能配置
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
