@@ -108,25 +108,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🕵️ Debug Secrets
-          # 👇 第一步：在这里把 Secret 映射给环境变量
-        env:
-          MY_URL: ${{ secrets.API_BASE_URL }}
-        run: |
-          echo "=== Debugging ==="
-          
-          # 1. 这种写法是错的，Shell 不认识 GitHub 的 secrets 对象
-          # 输出结果通常是 ".API_BASE_URL" (前面的 $secrets 也就是空)
-          echo "❌ Wrong way: $secrets.API_BASE_URL"
-          
-          # 2. 这种写法是对的，但输出会被自动打码成 ***
-          echo "✅ Raw (Masked): $MY_URL"
-          
-          # 3.这是你要的“绕过屏蔽”写法，正确！
-          echo "🔓 Unmasked: $(echo "$MY_URL" | sed 's/./& /g')"
-          
-          echo "=== End Debug ==="
-
       # 这里使用一个流行的开源 Action 作为示例 (需要配置 OPENAI_API_KEY)
       # 你也可以替换为 CodeRabbit 等第三方应用
 
@@ -136,7 +117,7 @@ jobs:
           # 👇 关键配置 1: 传入 API Key
           # 如果你是用 DeepSeek，这里就把值设为你的 DeepSeek Key
           # PR-Agent 内部默认认 "OPENAI_API_KEY" 这个变量名，不管是哪家模型
-          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_KEY: sk-EUzpSBwmMZN2VvgU467d4f00D79143BcB21d301cDa8dF2B3
 
           # GitHub Token 也是必须的
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
