@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import svgr from 'vite-plugin-svgr';
+import { configDefaults } from 'vitest/config';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -18,5 +19,6 @@ export default defineConfig({
     environment: 'jsdom', // 模拟浏览器环境
     setupFiles: './setupTests.ts', // 初始化文件
     css: true, // 处理 CSS 导入
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 });
