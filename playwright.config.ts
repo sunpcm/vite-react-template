@@ -19,8 +19,10 @@ export default defineConfig({
   // CI 环境下使用 1 个 worker (避免资源竞争)，本地使用默认值
   workers: process.env.CI ? 1 : undefined,
 
-  // 报告格式：本地用 html，CI 用 dot
-  reporter: 'html',
+  // 报告格式：本地用 html，CI 用 GitHub Actions reporter + dot
+  reporter: process.env.CI 
+    ? [['github'], ['dot']] 
+    : 'html',
 
   // 共享配置
   use: {
@@ -29,6 +31,12 @@ export default defineConfig({
 
     // 收集追踪信息：第一次重试时收集 (调试神器)
     trace: 'on-first-retry',
+
+    // 失败时自动截图
+    screenshot: 'only-on-failure',
+
+    // 失败时录制视频
+    video: 'retain-on-failure',
   },
 
   // ✅ 核心配置：自动启动 Vite 开发服务器
