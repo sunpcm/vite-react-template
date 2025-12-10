@@ -119,7 +119,7 @@ jobs:
           OPENAI_API_BASE: https://api.gptapi.us/v1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           config.model: "deepseek-chat"
-          config.fallback_models: '["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1","deepseek-v3.1-terminus"]'
+          config.fallback_models: '["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1"]'
           config.custom_model_max_tokens: "128000"
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
