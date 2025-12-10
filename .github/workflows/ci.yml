@@ -57,12 +57,12 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 10
+          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "20"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -122,8 +122,8 @@ jobs:
           # GitHub Token 也是必须的
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           config.model: "deepseek-chat"
-          config.fallback_models: ["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1","deepseek-v3.1-terminus"]
-        with:
+          config.fallback_models: '["deepseek-r1","deepseek-r1-0528","deepseek-v3","deepseek-v3.1","deepseek-v3.1-terminus"]'
+
           # Tool configuration
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
