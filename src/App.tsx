@@ -9,7 +9,7 @@ function App() {
   const features = [
     '⚡ Vite + React 18 + TypeScript',
     '🎨 Tailwind CSS',
-    '🧪 Vitest + Testing Library',
+    '🧪 Vitest + Testing Library + AI PR Review',
     '📏 ESLint + Prettier',
     '🔧 Husky + lint-staged',
     '📦 pnpm 包管理器',
