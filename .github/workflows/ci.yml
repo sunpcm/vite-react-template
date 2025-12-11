@@ -113,8 +113,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Print
-        run: echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
       - name: Qodo-AI PR-Agent
         uses: qodo-ai/pr-agent@main
         env:
