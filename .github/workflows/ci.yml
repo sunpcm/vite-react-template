@@ -68,12 +68,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 👇 新增：获取 Playwright 版本用于缓存 Key
+      # 获取 Playwright 版本用于缓存 Key
       - name: Get installed Playwright version
         id: playwright-version
         run: echo "PLAYWRIGHT_VERSION=$(pnpm ls @playwright/test --json | jq '.[0].version' -r)" >> $GITHUB_ENV
 
-      # 👇 新增：缓存浏览器二进制文件
+      # 缓存浏览器二进制文件
       - name: Cache playwright binaries
         uses: actions/cache@v4
         id: playwright-cache
@@ -82,10 +82,16 @@ jobs:
             ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
-      # 👇 修改：只有缓存未命中才安装浏览器
+      # 只有缓存未命中才安装浏览器
+      # 如果缓存命中，仍然需要运行 install-deps (只安装系统依赖)
+      #    因为缓存只存了浏览器二进制文件 (~/.cache/ms-playwright)，没存 apt-get 安装的系统库！
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install --with-deps
+
+      - name: Install Playwright System Dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps
 
       - name: 🚀 Run Smoke Tests
         run: pnpm exec playwright test --grep @smoke
