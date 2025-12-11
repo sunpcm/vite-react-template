@@ -7,12 +7,6 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   issue_comment:
     types: [created]
-
-# 增加并发控制，避免重复运行浪费资源
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 # 增加并发控制，避免重复运行浪费资源
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
