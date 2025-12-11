@@ -105,3 +105,10 @@ public
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+
+# Playwright
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
