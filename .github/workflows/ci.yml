@@ -113,11 +113,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: CodiumAI PR-Agent
+      - name: Print
+        run: echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
+      - name: Qodo-AI PR-Agent
         uses: qodo-ai/pr-agent@main
         env:
           # API 配置
-          OPENAI_KEY: sk-EUzpSBwmMZN2VvgU467d4f00D79143BcB21d301cDa8dF2B3
+          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_API_BASE: https://api.gptapi.us/v1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
