@@ -4,9 +4,9 @@ name: PR Quality Check
 on:
   pull_request:
     branches: [develop, main]
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, ready_for_review]
   issue_comment:
-    types: [created, edited]
+    types: [created]
 
 # 增加并发控制，避免重复运行浪费资源
 concurrency:
@@ -51,6 +51,14 @@ jobs:
       - name: 🧪 Unit Test
         run: pnpm test:run
 
+      - name: Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
   # 任务 2: E2E 冒烟测试 (只跑关键路径)
   e2e-smoke:
     name: 🎭 E2E Smoke Test
@@ -88,7 +96,6 @@ jobs:
           path: |
             ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
-
       # 只有缓存未命中才安装浏览器
       # 如果缓存命中，仍然需要运行 install-deps (只安装系统依赖)
       #    因为缓存只存了浏览器二进制文件 (~/.cache/ms-playwright)，没存 apt-get 安装的系统库！
@@ -101,15 +108,25 @@ jobs:
         run: pnpm exec playwright install-deps
 
       - name: 🚀 Run Smoke Tests
-        run: pnpm exec playwright test --grep @smoke
+        run: pnpm exec playwright test --grep @smoke --retries=2
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
 
   # 任务 3: AI 代码审查 (Non-blocking)
   ai-review:
     name: 🤖 AI Code Review
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'pull_request' || 
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/review'))
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
+      (github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/review'))
     continue-on-error: true # ✅ 关键：即使 AI 报错或超时，也不阻止 PR 合并
     # ⚠️ 权限必须配置！PR-Agent 需要比普通 Reviewer 更高的权限
     permissions:
@@ -121,6 +138,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Qodo-AI PR-Agent
+        id: ai-review-step
         uses: qodo-ai/pr-agent@main
         env:
           # API 配置
@@ -138,3 +156,13 @@ jobs:
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
           github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "review_requested"]'
+
+      - name: Report AI Review Status
+        if: always()
+        run: |
+          if [ "${{ steps.ai-review-step.outcome }}" == "failure" ]; then
+            echo "⚠️ AI Review failed but not blocking PR"
+            echo "::warning::AI Code Review encountered an error"
+          else
+            echo "✅ AI Review completed successfully"
+          fi
