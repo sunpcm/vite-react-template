@@ -25,22 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
 
       # ✅ Build Check: 确保能打包，无类型错误
       - name: 📦 Build Check
@@ -50,42 +36,28 @@ jobs:
       - name: 🧪 Unit Test
         run: pnpm test:run
 
-      - name: Upload Coverage Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage/
-          retention-days: 7
+#      - name: Upload Coverage Report
+#        if: always()
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: coverage-report
+#          path: coverage/
+#          retention-days: 7
 
   # 任务 2: E2E 冒烟测试 (只跑关键路径)
   e2e-smoke:
     name: 🎭 E2E Smoke Test
     runs-on: ubuntu-latest
     needs: quality-check
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
 
       # 获取 Playwright 版本用于缓存 Key
       - name: Get installed Playwright version
         id: playwright-version
-        run: echo "PLAYWRIGHT_VERSION=$(pnpm ls @playwright/test --json | jq '.[0].version' -r)" >> $GITHUB_ENV
+        run: echo "PLAYWRIGHT_VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test']")" >> $GITHUB_ENV
 
       # 缓存浏览器二进制文件
       - name: Cache playwright binaries
@@ -109,13 +81,13 @@ jobs:
       - name: 🚀 Run Smoke Tests
         run: pnpm exec playwright test --grep @smoke --retries=2
 
-      - name: Upload Playwright Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+#      - name: Upload Playwright Report
+#        if: always()
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: playwright-report
+#          path: playwright-report/
+#          retention-days: 7
 
   # 任务 3: AI 代码审查 (Non-blocking)
   ai-review:
@@ -127,12 +99,6 @@ jobs:
       github.event.issue.pull_request &&
       contains(github.event.comment.body, '/review'))
     continue-on-error: true # ✅ 关键：即使 AI 报错或超时，也不阻止 PR 合并
-    # ⚠️ 权限必须配置！PR-Agent 需要比普通 Reviewer 更高的权限
-    permissions:
-      issues: write # 允许在 PR 里发评论
-      pull-requests: write # 允许修改 PR 详情（如自动填 Description）
-      contents: write # 允许提交代码建议
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
