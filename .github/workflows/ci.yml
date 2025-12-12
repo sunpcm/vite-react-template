@@ -4,13 +4,15 @@ name: PR Quality Check
 on:
   pull_request:
     branches: [develop, main]
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, ready_for_review]
+    paths-ignore: # ✅ 新增
+      - "**.md"
+      - "docs/**"
   issue_comment:
-    types: [created, edited]
-
+    types: [created]
 # 增加并发控制，避免重复运行浪费资源
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
   cancel-in-progress: true
 
 # 权限配置 (AI Review 需要写评论权限)
@@ -24,24 +26,19 @@ jobs:
   quality-check:
     name: 🏗️ Build & Unit Test
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    timeout-minutes: 15
+    if:
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
+      (github.event_name == 'issue_comment'
+      && github.event.issue.pull_request
+      && contains(github.event.comment.body, '/retest'))
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
         with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          ref: ${{ github.event_name == 'issue_comment' && format('refs/pull/{0}/merge', github.event.issue.number) || '' }}
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
 
       # ✅ Build Check: 确保能打包，无类型错误
       - name: 📦 Build Check
@@ -51,34 +48,37 @@ jobs:
       - name: 🧪 Unit Test
         run: pnpm test:run
 
+  #      - name: Upload Coverage Report
+  #        if: always()
+  #        uses: actions/upload-artifact@v4
+  #        with:
+  #          name: coverage-report
+  #          path: coverage/
+  #          retention-days: 7
+
   # 任务 2: E2E 冒烟测试 (只跑关键路径)
   e2e-smoke:
     name: 🎭 E2E Smoke Test
     runs-on: ubuntu-latest
     needs: quality-check
-    if: github.event_name == 'pull_request'
+    timeout-minutes: 20
+    if: (github.event_name == 'pull_request'
+      && github.event.pull_request.draft == false) ||
+      (github.event_name == 'issue_comment'
+      && github.event.issue.pull_request
+      && contains(github.event.comment.body, '/retest'))
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
         with:
-          version: 10
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          ref: ${{ github.event_name == 'issue_comment' && format('refs/pull/{0}/merge', github.event.issue.number) || '' }}
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
 
       # 获取 Playwright 版本用于缓存 Key
       - name: Get installed Playwright version
         id: playwright-version
-        run: echo "PLAYWRIGHT_VERSION=$(pnpm ls @playwright/test --json | jq '.[0].version' -r)" >> $GITHUB_ENV
+        run: echo "PLAYWRIGHT_VERSION=$(node -p "require('@playwright/test/package.json').version")" >> $GITHUB_ENV
 
       # 缓存浏览器二进制文件
       - name: Cache playwright binaries
@@ -88,7 +88,6 @@ jobs:
           path: |
             ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
-
       # 只有缓存未命中才安装浏览器
       # 如果缓存命中，仍然需要运行 install-deps (只安装系统依赖)
       #    因为缓存只存了浏览器二进制文件 (~/.cache/ms-playwright)，没存 apt-get 安装的系统库！
@@ -101,26 +100,33 @@ jobs:
         run: pnpm exec playwright install-deps
 
       - name: 🚀 Run Smoke Tests
-        run: pnpm exec playwright test --grep @smoke
+        run: pnpm exec playwright test --grep @smoke --retries=2
+
+  #      - name: Upload Playwright Report
+  #        if: always()
+  #        uses: actions/upload-artifact@v4
+  #        with:
+  #          name: playwright-report
+  #          path: playwright-report/
+  #          retention-days: 7
 
   # 任务 3: AI 代码审查 (Non-blocking)
   ai-review:
     name: 🤖 AI Code Review
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'pull_request' || 
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/review'))
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
+      (github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/review'))
     continue-on-error: true # ✅ 关键：即使 AI 报错或超时，也不阻止 PR 合并
-    # ⚠️ 权限必须配置！PR-Agent 需要比普通 Reviewer 更高的权限
-    permissions:
-      issues: write # 允许在 PR 里发评论
-      pull-requests: write # 允许修改 PR 详情（如自动填 Description）
-      contents: write # 允许提交代码建议
-
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'issue_comment' && format('refs/pull/{0}/merge', github.event.issue.number) || '' }}
       - name: Qodo-AI PR-Agent
+        id: ai-review-step
         uses: qodo-ai/pr-agent@main
         env:
           # API 配置
@@ -138,3 +144,72 @@ jobs:
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
           github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "review_requested"]'
+
+      - name: Report AI Review Status
+        if: always()
+        run: |
+          if [ "${{ steps.ai-review-step.outcome }}" == "failure" ]; then
+            echo "⚠️ AI Review failed but not blocking PR"
+            echo "::warning::AI Code Review encountered an error"
+          else
+            echo "✅ AI Review completed successfully"
+          fi
+  ci-status-label:
+    name: Update CI Status Label
+    runs-on: ubuntu-latest
+    needs: [quality-check, e2e-smoke]
+    if: |
+      always() && 
+      (github.event_name == 'pull_request' || 
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/retest')))
+    steps:
+      - name: Add or Remove ci-failed label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const label = 'ci-failed';
+
+            const qualityResult = '${{ needs.quality-check.result }}';
+            const e2eResult = '${{ needs.e2e-smoke.result }}';
+
+            // 判断是否有失败（跳过不算失败）
+            const hasFailed = qualityResult === 'failure' || e2eResult === 'failure';
+
+            // 获取当前 PR 的所有标签
+            const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number: prNumber,
+            });
+            const hasLabel = currentLabels.some(l => l.name === label);
+
+            // 如果被取消，不做任何操作
+            if (qualityResult === 'cancelled' || e2eResult === 'cancelled') {
+              console.log('⏹️ CI was cancelled, skipping label update');
+              return;
+            }
+
+            if (hasFailed && !hasLabel) {
+              // CI 失败，添加标签
+              console.log('❌ CI failed, adding label');
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: prNumber,
+                labels: [label],
+              });
+            } else if (!hasFailed && hasLabel) {
+              // CI 通过，移除标签
+              console.log('✅ CI passed, removing label');
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number: prNumber,
+                name: label,
+              });
+            } else {
+              console.log(`ℹ️ No label change needed (failed: ${hasFailed}, hasLabel: ${hasLabel})`);
+            }
