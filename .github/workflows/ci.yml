@@ -35,16 +35,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Commitlint 需要完整的 commit 历史
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Install Commitlint
-        run: npm install -g @commitlint/cli @commitlint/config-conventional
+      # ✅ 1. 使用你封装好的 Setup Project
+      # 这会安装 pnpm，并运行 pnpm install，确保安装了项目里指定版本的 commitlint
+      - name: Setup Project
+        uses: ./.github/actions/setup-project
+      # ✅ 2. 使用 pnpm exec 运行本地安装的 commitlint
+      # 这样它会自动读取项目根目录下的 commitlint.config.js
       - name: Validate Commits
-        # 检查 PR 的所有 Commit 是否符合规范
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-
+        run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
   # 1.2 [新增] 依赖安全审查
   dependency-review:
     name: 🛡️ Dep Review
