@@ -78,7 +78,7 @@ jobs:
       # 获取 Playwright 版本用于缓存 Key
       - name: Get installed Playwright version
         id: playwright-version
-        run: echo "PLAYWRIGHT_VERSION=$(node -p "require('@playwright/test/package.json').version")" >> $GITHUB_ENV
+        run: echo "PLAYWRIGHT_VERSION=$(node -p 'require("@playwright/test/package.json").version')" >> $GITHUB_ENV
 
       # 缓存浏览器二进制文件
       - name: Cache playwright binaries
